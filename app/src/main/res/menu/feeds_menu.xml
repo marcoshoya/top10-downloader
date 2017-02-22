@@ -9,6 +9,6 @@
         android:id="@+id/mnuPaid"
         android:title="Paid apps" />
     <item
-        android:id="@+id/menuSongs"
+        android:id="@+id/mnuSongs"
         android:title="Songs" />
 </menu>
