@@ -6,12 +6,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -19,44 +17,55 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
-    private final String freeUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml";
     private ListView listApps;
+    private static final String TAG = "MainActivity";
+    private String feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=%d/xml";
+    private int limit = 10;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         listApps = (ListView) findViewById(R.id.xmlListView);
-        downloadData(this.freeUrl);
+        downloadData(String.format(this.feedUrl, this.limit));
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.feeds_menu, menu);
-
+        if (this.limit == 10) {
+            menu.findItem(R.id.mnu10);
+        } else {
+            menu.findItem(R.id.mnu25).setChecked(true);
+        }
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        String feedUrl;
 
         switch (id) {
             case R.id.mnuFree:
-                feedUrl = this.freeUrl;
+                this.feedUrl = this.feedUrl;
                 break;
             case R.id.mnuPaid:
-                feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplications/limit=10/xml";
+                this.feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplications/limit=%d/xml";
                 break;
             case R.id.mnuSongs:
-                feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=10/xml";
+                this.feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=%d/xml";
+                break;
+            case R.id.mnu10:
+            case R.id.mnu25:
+                if (!item.isChecked()) {
+                    item.setChecked(true);
+                    this.limit = 35 - this.limit;
+                }
                 break;
             default:
                 return super.onOptionsItemSelected(item);
         }
-        downloadData(feedUrl);
+        downloadData(String.format(this.feedUrl, this.limit));
 
         return true;
     }
@@ -77,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            Log.d(TAG, "onPostExecute: content " + s);
+            //Log.d(TAG, "onPostExecute: content " + s);
 
             ParseApplications parseApplications = new ParseApplications();
             parseApplications.parse(s);
@@ -106,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 int response = conn.getResponseCode();
 
-                Log.d(TAG, "downloadXml: response code " + response);
+                //Log.d(TAG, "downloadXml: response code " + response);
 
                 //InputStream inputStream = conn.getInputStream();
                 //InputStreamReader streamReader = new InputStreamReader(inputStream);
