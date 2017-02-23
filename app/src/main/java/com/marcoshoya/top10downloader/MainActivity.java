@@ -19,6 +19,9 @@ public class MainActivity extends AppCompatActivity {
 
     private ListView listApps;
     private static final String TAG = "MainActivity";
+    private String cachedUrl = "INVALIDATED";
+    public static final String STATE_URL = "feedUrl";
+    public static final String STATE_LIMIT = "feedLimit";
     private String feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=%d/xml";
     private int limit = 10;
 
@@ -26,7 +29,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        listApps = (ListView) findViewById(R.id.xmlListView);
+        this.listApps = (ListView) findViewById(R.id.xmlListView);
+
+        if (savedInstanceState != null) {
+            this.feedUrl = savedInstanceState.getString(STATE_URL);
+            this.limit = savedInstanceState.getInt(STATE_LIMIT);
+        }
+
         downloadData(String.format(this.feedUrl, this.limit));
     }
 
@@ -62,6 +71,9 @@ public class MainActivity extends AppCompatActivity {
                     this.limit = 35 - this.limit;
                 }
                 break;
+            case R.id.mnuRefresh:
+                cachedUrl = "INVALIDATED";
+                break;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -70,10 +82,20 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putString(STATE_URL, feedUrl);
+        outState.putInt(STATE_LIMIT, limit);
+        super.onSaveInstanceState(outState);
+    }
+
     private void downloadData(String feedUrl) {
-        Log.d(TAG, "downloadData: url: " + feedUrl);
-        DownloadData data = new DownloadData();
-        data.execute(feedUrl);
+        if (!feedUrl.equalsIgnoreCase(cachedUrl)) {
+            Log.d(TAG, "downloadData: url: " + feedUrl);
+            DownloadData data = new DownloadData();
+            data.execute(feedUrl);
+            cachedUrl = feedUrl;
+        }
     }
 
     /**
